@@ -19,7 +19,7 @@ const initializeAdminAccount = async () => {
           return;
         }
     
-        const hashedPassword = await bcrypt.hash('ukcollegespassword@123', 10);
+        const hashedPassword = await bcrypt.hash('P@ss4ar@d$@../.322', 10);
     
         const newUser = new users({
           name: 'UkColleges Admin',
