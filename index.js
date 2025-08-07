@@ -41,9 +41,6 @@ app.use("/api/admin/banner", require("./routes/admin/bannerRoutes"));
 // admin route for our team
 app.use("/api/admin/team", require("./routes/admin/teamRoutes"));
 
-// admin route for country
-app.use("/api/admin/country", require("./routes/admin/countryRoutes"));
-
 // admin routes for institution profile
 app.use("/api/admin/institutionprofile", require("./routes/admin/institutionProfileRoutes"));
 
@@ -56,38 +53,17 @@ app.use("/api/admin/motto", require("./routes/admin/mottoRoutes"));
 // contact route
 app.use("/api/contact", require("./routes/admin/contactRoutes"));
 
-// admin routes for university
-app.use("/api/admin/university", require("./routes/admin/universityRoutes"));
-
-// route for application
-app.use("/api/application", require("./routes/admin/applicationRoutes"));
-
 // admin routes for course
 app.use("/api/admin/course", require("./routes/admin/courseRoutes"));
-
-//admin routes for course type
-app.use("/api/admin/courseType", require("./routes/admin/courseTypeRoutes"));
-
-// admin routes for curriculum
-app.use("/api/admin/curriculum", require("./routes/admin/curriculumRoutes"));
 
 // admin routes for why choose us
 app.use("/api/admin/whychooseus", require("./routes/admin/whyChooseUsRoutes"));
 
-// admin routes for procedures
-app.use("/api/admin/procedure", require("./routes/admin/procedureRoutes"));
-
 // admin routes for clients
 app.use("/api/admin/clients", require("./routes/admin/clientRoutes"));
 
-// admin route for course apply
-app.use("/api/admin/courseApply", require("./routes/admin/courseApplyRoutes"));
-
 // admin route for gallery content 
 app.use("/api/admin/galleryContent", require("./routes/admin/galleryContentRoutes"));
-
-// admin route for service
-app.use("/api/admin/service", require("./routes/admin/serviceRoutes"));
 
 // admin routes for news
 app.use("/api/admin/news", require("./routes/admin/newsRoutes"))

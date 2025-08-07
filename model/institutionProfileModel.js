@@ -29,6 +29,9 @@ const institutionProfileSchema = mongoose.Schema(
         linkedin: {
             type: String,
         },
+        brochure: {
+            type: String,
+        },
     },
     { timestamps: true }
 );

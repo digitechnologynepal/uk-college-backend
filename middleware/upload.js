@@ -12,21 +12,33 @@ const allowedMimeTypes = [
   "video/x-matroska",
 ];
 
+const pdfMimeTypes = ["application/pdf"];   // PDF only
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "./uploads");
   },
   filename: (req, file, cb) => {
     const fileName = file.originalname.replace(/\s/g, "_");
-    cb(null, Date.now() + "_" + fileName);
+    cb(null, fileName);
   },
 });
 
+// file filter
 const fileFilter = (req, file, cb) => {
   if (allowedMimeTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
     cb(new Error("Only image and video files are allowed!"), false);
+  }
+};
+
+// PDF filter
+const pdfFileFilter = (req, file, cb) => {
+  if (pdfMimeTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Only PDF files are allowed!"), false);
   }
 };
 
@@ -37,7 +49,13 @@ const upload = multer({
   fileFilter,
 });
 
+const uploadPDF = multer({
+  storage,
+  fileFilter: pdfFileFilter,
+});
+
 module.exports = {
   upload,
   uploadAll,
+  uploadPDF
 };

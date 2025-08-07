@@ -1,12 +1,14 @@
 const { responseHandler } = require("../../helper/responseHandler");
 const institutionProfile = require("../../model/institutionProfileModel");
+const fs = require("fs");
+const path = require("path");
 
 const updateInstitutionProfile = async (req, res) => {
     try {
-        const { email, location, number, facebook, threadLink, whatsapp, insta, linkedin ,locationForMap } = req.body;
-        console.log(req.body);
+        const { email, location, number, facebook, threadLink, whatsapp, insta, linkedin, locationForMap } = req.body;
+        const brochureFile = req.file;
 
-        if (!email || !location || !number || !facebook || !whatsapp || !insta || !linkedin  || !locationForMap) {
+        if (!email || !location || !number || !facebook || !whatsapp || !insta || !linkedin || !locationForMap) {
             return responseHandler(res, 400, false, 'All fields are required.');
         }
 
@@ -23,6 +25,15 @@ const updateInstitutionProfile = async (req, res) => {
             existingContent.linkedin = linkedin;
             existingContent.locationForMap = locationForMap;
 
+            if (brochureFile) {
+                if (existingContent.brochure) {
+                    const oldPath = path.join(__dirname, "../../uploads", existingContent.brochure);
+                    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+                }
+                existingContent.brochure = brochureFile.filename;
+            }
+
+
             await existingContent.save();
             return responseHandler(res, 200, true, 'Institution Profile updated successfully.', existingContent);
         } else {
@@ -35,8 +46,8 @@ const updateInstitutionProfile = async (req, res) => {
                 whatsapp,
                 insta,
                 linkedin,
-                locationForMap
-
+                locationForMap,
+                brochure: brochureFile ? brochureFile.filename : null,
             });
 
             await newContent.save();

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { upload } = require("../../middleware/upload"); // should support mixed files (images/videos)
+const { upload } = require("../../middleware/upload"); 
 
 const galleryContentController = require("../../controllers/admin/galleryContentController");
 
