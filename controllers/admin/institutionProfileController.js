@@ -6,7 +6,9 @@ const path = require("path");
 const updateInstitutionProfile = async (req, res) => {
     try {
         const { email, location, number, facebook, threadLink, whatsapp, insta, linkedin, locationForMap } = req.body;
-        const brochureFile = req.file;
+        const brochureFile = req.files?.brochure?.[0];
+        const certificateFile = req.files?.certificate?.[0];
+
 
         if (!email || !location || !number || !facebook || !whatsapp || !insta || !linkedin || !locationForMap) {
             return responseHandler(res, 400, false, 'All fields are required.');
@@ -33,6 +35,14 @@ const updateInstitutionProfile = async (req, res) => {
                 existingContent.brochure = brochureFile.filename;
             }
 
+            if (certificateFile) {
+                if (existingContent.certificate) {
+                    const oldPath = path.join(__dirname, "../../uploads", existingContent.certificate);
+                    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+                }
+                existingContent.certificate = certificateFile.filename;
+            }
+
 
             await existingContent.save();
             return responseHandler(res, 200, true, 'Institution Profile updated successfully.', existingContent);
@@ -48,6 +58,7 @@ const updateInstitutionProfile = async (req, res) => {
                 linkedin,
                 locationForMap,
                 brochure: brochureFile ? brochureFile.filename : null,
+                certificate: certificateFile ? certificateFile.filename : null,
             });
 
             await newContent.save();

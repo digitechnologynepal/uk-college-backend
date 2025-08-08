@@ -32,6 +32,9 @@ const institutionProfileSchema = mongoose.Schema(
         brochure: {
             type: String,
         },
+        certificate: {
+            type: String,
+        },
     },
     { timestamps: true }
 );
