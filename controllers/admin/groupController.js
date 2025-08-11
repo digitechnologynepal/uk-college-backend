@@ -89,16 +89,20 @@ const updateGroupItem = async (req, res) => {
       updateData["items.$.website"] = website;
     }
 
-    if (req.file) {
-      // Delete old image if exists
+    if (req.files && req.files.image && req.files.image.length > 0) {
+      const file = req.files.image[0];
+
+      // Delete old image
       if (item.image) {
         const oldImagePath = path.join(__dirname, "../../uploads", item.image.replace("/uploads/", ""));
         if (fs.existsSync(oldImagePath)) {
           fs.unlinkSync(oldImagePath);
         }
       }
-      updateData["items.$.image"] = `/uploads/${req.file.filename}`;
+
+      updateData["items.$.image"] = `/uploads/${file.filename}`;
     }
+
 
     if (Object.keys(updateData).length === 0) {
       return responseHandler(res, 400, false, "No data to update", null);
