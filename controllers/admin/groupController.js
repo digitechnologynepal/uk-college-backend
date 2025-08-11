@@ -6,7 +6,7 @@ const path = require("path");
 // Create or update Group main info + optionally add one item
 const manageGroup = async (req, res) => {
   try {
-    const { mainTitle, mainDescription } = req.body;
+    const { mainTitle, mainDescription, mainWebsite } = req.body;
     const newMainImage = req.files?.mainImage?.[0];
     const mainImagePath = newMainImage ? `/uploads/${newMainImage.filename}` : null;
 
@@ -16,6 +16,7 @@ const manageGroup = async (req, res) => {
     if (group) {
       group.mainTitle = mainTitle || group.mainTitle;
       group.mainDescription = mainDescription || group.mainDescription;
+      group.mainWebsite = mainWebsite || group.mainWebsite;
 
       // Replace image file if new image uploaded
       if (mainImagePath) {
@@ -34,6 +35,7 @@ const manageGroup = async (req, res) => {
       const newGroup = new Group({
         mainTitle,
         mainDescription,
+        mainWebsite,
         mainImage: mainImagePath,
         items: [],
       });
@@ -48,17 +50,17 @@ const manageGroup = async (req, res) => {
 
 const createGroupItem = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { website } = req.body;
     const imageFile = req.files?.image?.[0];
-    if (!name || !imageFile) {
-      return responseHandler(res, 400, false, "Name and image are required");
+    if (!imageFile) {
+      return responseHandler(res, 400, false, "Image is required");
     }
 
     const image = `/uploads/${imageFile.filename}`;
     const group = await Group.findById(req.params.groupId);
     if (!group) return responseHandler(res, 404, false, "Group not found");
 
-    group.items.push({ name, image });
+    group.items.push({ website, image });
     await group.save();
     return responseHandler(res, 200, true, "Item added", group);
   } catch (error) {
@@ -68,31 +70,56 @@ const createGroupItem = async (req, res) => {
 
 const updateGroupItem = async (req, res) => {
   try {
-    const { name } = req.body;
-    const group = await Group.findById(req.params.groupId);
-    if (!group) return responseHandler(res, 404, false, "Group not found");
+    const { groupId, itemId } = req.params;
+    const { website } = req.body;
 
-    const item = group.items.id(req.params.itemId);
-    if (!item) return responseHandler(res, 404, false, "Item not found");
-
-    if (name) item.name = name;
-
-    const imageFile = req.files?.image?.[0];
-    if (imageFile) {
-      // delete old file
-      const oldImagePath = path.join(__dirname, "../", item.image);
-      if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
-      item.image = `/uploads/${imageFile.filename}`;
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return responseHandler(res, 404, false, "Group not found", null);
     }
 
-    await group.save();
-    return responseHandler(res, 200, true, "Item updated", group);
+    const item = group.items.id(itemId);
+    if (!item) {
+      return responseHandler(res, 404, false, "Item not found", null);
+    }
+
+    const updateData = {};
+
+    if (website !== undefined) {
+      updateData["items.$.website"] = website;
+    }
+
+    if (req.file) {
+      // Delete old image if exists
+      if (item.image) {
+        const oldImagePath = path.join(__dirname, "../../uploads", item.image.replace("/uploads/", ""));
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
+      }
+      updateData["items.$.image"] = `/uploads/${req.file.filename}`;
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return responseHandler(res, 400, false, "No data to update", null);
+    }
+
+    // Perform atomic update using positional operator
+    const updatedGroup = await Group.findOneAndUpdate(
+      { _id: groupId, "items._id": itemId },
+      { $set: updateData },
+      { new: true }
+    );
+
+    return responseHandler(res, 200, true, "Item updated successfully", updatedGroup);
   } catch (error) {
-    return responseHandler(res, 500, false, error.message, null);
+    console.error("Error in updateGroupItem:", error);
+    return responseHandler(res, 500, false, "Server error", error.message);
   }
 };
 
-// Get all groups (unchanged)
+
+// Get all groups
 const getAllGroups = async (req, res) => {
   try {
     const groups = await Group.find().sort({ createdAt: -1 });
@@ -106,7 +133,7 @@ const getAllGroups = async (req, res) => {
   }
 };
 
-// Delete group and all associated images (unchanged)
+// Delete group and all associated images
 const deleteGroup = async (req, res) => {
   try {
     const { id } = req.params;

@@ -4,10 +4,11 @@ const GroupSchema = new mongoose.Schema({
     mainTitle: { type: String, required: true },
     mainImage: { type: String, required: true },
     mainDescription: { type: String, required: true },
+    mainWebsite: { type: String },
 
     items: [
         {
-            name: { type: String, required: true },
+            website: { type: String },
             image: { type: String, required: true },
         },
     ],
