@@ -62,6 +62,9 @@ app.use("/api/admin/whychooseus", require("./routes/admin/whyChooseUsRoutes"));
 // admin routes for clients
 app.use("/api/admin/clients", require("./routes/admin/clientRoutes"));
 
+// admin routes for clients
+app.use("/api/admin/category", require("./routes/admin/categoryRoutes"));
+
 // admin route for gallery content 
 app.use("/api/admin/galleryContent", require("./routes/admin/galleryContentRoutes"));
 

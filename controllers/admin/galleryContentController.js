@@ -1,4 +1,5 @@
 const GalleryContent = require("../../model/galleryContentModel");
+const Category = require("../../model/categoryModel");
 const { responseHandler } = require("../../helper/responseHandler");
 const fs = require("fs");
 const path = require("path");
