@@ -98,7 +98,7 @@ const updateTeamMember = async (req, res) => {
       updateData.image = newImage;
 
       if (existingTeamMember.image) {
-        const oldImagePath = path.join(__dirname, "../uploads", existingTeamMember.image);
+        const oldImagePath = path.join(__dirname, "../../uploads", existingTeamMember.image);
         if (fs.existsSync(oldImagePath)) {
           fs.unlinkSync(oldImagePath);
         }

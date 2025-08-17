@@ -41,6 +41,9 @@ app.use("/api/admin/banner", require("./routes/admin/bannerRoutes"));
 // admin route for our team
 app.use("/api/admin/team", require("./routes/admin/teamRoutes"));
 
+// admin route for our team
+app.use("/api/admin/testimonial", require("./routes/admin/testimonialRoutes"));
+
 // admin routes for institution profile
 app.use("/api/admin/institutionprofile", require("./routes/admin/institutionProfileRoutes"));
 
