@@ -4,9 +4,23 @@ const { responseHandler } = require("../../helper/responseHandler");
 const fs = require("fs");
 const path = require("path");
 
+// Helper: Get final category title or fallback to "Others"
+const getFinalCategoryTitle = async (categoryTitle) => {
+    if (categoryTitle) return categoryTitle;
+
+    const categoryDoc = await Category.findOne({ tab: "gallery" });
+    if (!categoryDoc) throw new Error("Gallery categories not found");
+
+    const others = categoryDoc.categories.find(
+        (c) => c.title?.toLowerCase() === "others"
+    );
+    return others?.title || "Others";
+};
+
+// Create gallery content
 const createGalleryContent = async (req, res) => {
     try {
-        const { name, date } = req.body;
+        const { name, date, categoryTitle } = req.body;
         const file = req.file;
 
         if (!name || !file) {
@@ -22,11 +36,14 @@ const createGalleryContent = async (req, res) => {
             return responseHandler(res, 400, false, "Unsupported file type.");
         }
 
+        const finalCategory = await getFinalCategoryTitle(categoryTitle);
+
         const doc = {
             name,
             file: file.filename,
             fileType,
             date: date ? new Date(date) : new Date(),
+            categoryTitle: finalCategory,
         };
 
         const inserted = await GalleryContent.create(doc);
@@ -37,13 +54,14 @@ const createGalleryContent = async (req, res) => {
     }
 };
 
+// Get all gallery contents
 const getAllGalleryContents = async (req, res) => {
     try {
-        const { type } = req.query; // type can be 'image' or 'video'
+        const { type } = req.query; // type = 'image' or 'video'
 
         const filter = type ? { fileType: type } : {};
-
         const galleries = await GalleryContent.find(filter).sort({ createdAt: -1 });
+
         return responseHandler(res, 200, true, "Gallery media content fetched successfully.", galleries);
     } catch (error) {
         console.error("Error in getAllGalleryContents:", error);
@@ -51,11 +69,11 @@ const getAllGalleryContents = async (req, res) => {
     }
 };
 
-
+// Update gallery content
 const updateGalleryContent = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, date } = req.body;
+        const { name, date, categoryTitle } = req.body;
         const file = req.file;
 
         const existing = await GalleryContent.findById(id);
@@ -63,7 +81,7 @@ const updateGalleryContent = async (req, res) => {
             return responseHandler(res, 404, false, "Content not found.");
         }
 
-        // Delete old file if a new one is uploaded
+        // Delete old file if new one uploaded
         if (file && existing.file) {
             const oldPath = path.join(__dirname, "../../../uploads", existing.file);
             if (fs.existsSync(oldPath)) {
@@ -73,6 +91,9 @@ const updateGalleryContent = async (req, res) => {
 
         existing.name = name || existing.name;
         existing.date = date ? new Date(date) : existing.date;
+
+        // Handle category update
+        existing.categoryTitle = await getFinalCategoryTitle(categoryTitle);
 
         if (file) {
             existing.file = file.filename;
@@ -93,7 +114,7 @@ const updateGalleryContent = async (req, res) => {
     }
 };
 
-
+// Delete gallery content
 const deleteGalleryContent = async (req, res) => {
     try {
         const { id } = req.params;
@@ -102,8 +123,8 @@ const deleteGalleryContent = async (req, res) => {
             return responseHandler(res, 404, false, "Gallery content not found.");
         }
 
-        // Delete image file
-        const filePath = path.join(__dirname, "../../../uploads", content.file);
+        // Delete file
+        const filePath = path.join(__dirname, "../../uploads", content.file);
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
         }
@@ -116,9 +137,27 @@ const deleteGalleryContent = async (req, res) => {
     }
 };
 
+// Get gallery with categories
+const getGalleryWithCategories = async (req, res) => {
+    try {
+        const gallery = await GalleryContent.find().sort({ createdAt: -1 });
+        const categoryDoc = await Category.findOne({ tab: "gallery" });
+        const categories = categoryDoc?.categories.filter(c => !c.isDeleted) || [];
+
+        res.status(200).json({
+            success: true,
+            message: "Gallery and categories fetched successfully",
+            data: { categories, gallery },
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 module.exports = {
     createGalleryContent,
     getAllGalleryContents,
     updateGalleryContent,
     deleteGalleryContent,
+    getGalleryWithCategories,
 };

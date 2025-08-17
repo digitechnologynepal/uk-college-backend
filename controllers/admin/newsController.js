@@ -4,114 +4,96 @@ const Category = require("../../model/categoryModel");
 const fs = require("fs");
 const path = require("path");
 
+// Helper: Get final category title or fallback to "Others"
+const getFinalCategoryTitle = async (categoryTitle) => {
+  if (categoryTitle) return categoryTitle;
+
+  const categoryDoc = await Category.findOne({ tab: "newsEvents" });
+  if (!categoryDoc) throw new Error("News categories not found");
+
+  const others = categoryDoc.categories.find(
+    (c) => c.title?.toLowerCase() === "others"
+  );
+  return others?.title || "Others";
+};
+
+// Create News
 const createNews = async (req, res) => {
   try {
-    const { title, description, category } = req.body;
+    const { title, description, categoryTitle } = req.body;
+    if (!title || !description)
+      return responseHandler(res, 400, false, "Title and description are required");
 
-    if (!title || !description) {
-      return responseHandler(res, 400, false, "Required fields are required", null);
-    }
-
-    const categoryDoc = await Category.findOne({ tab: "newsEvents" });
-    if (!categoryDoc) return responseHandler(res, 500, false, "Category document missing", null);
-
-    // Determine final category
-    let finalCategory = category;
-    if (!finalCategory) {
-      const others = categoryDoc.categories.find(c => c.title === "Others");
-      if (!others) return responseHandler(res, 500, false, '"Others" category missing', null);
-      finalCategory = others._id;
-    } else {
-      const exists = categoryDoc.categories.id(finalCategory);
-      if (!exists) return responseHandler(res, 400, false, "Invalid category selected", null);
-    }
+    const finalCategory = await getFinalCategoryTitle(categoryTitle);
 
     const newNews = new News({
       title,
       description,
       image: req.file ? req.file.filename : null,
-      category: finalCategory,
+      categoryTitle: finalCategory,
     });
 
     await newNews.save();
 
-    // Populate category for response
-    const populatedNews = await News.findById(newNews._id).populate('category', 'title');
-
-    responseHandler(res, 201, true, "News created successfully", populatedNews);
+    responseHandler(res, 201, true, "News created successfully", newNews);
   } catch (error) {
     responseHandler(res, 500, false, "Server error", error.message);
   }
 };
 
-
+// Get all news
 const getAllNews = async (req, res) => {
   try {
-    const news = await News.find().populate('category', 'title').sort({ createdAt: -1 });
+    const news = await News.find().sort({ createdAt: -1 });
     responseHandler(res, 200, true, "News fetched successfully", news);
   } catch (error) {
     responseHandler(res, 500, false, "Server error", error.message);
   }
 };
 
+// Delete news
 const deleteNews = async (req, res) => {
   try {
     const { id } = req.params;
-    const foundNews = await News.findByIdAndDelete(id);
-    if (!foundNews) {
-      return responseHandler(res, 404, false, "News not found", null);
-    }
+    const newsItem = await News.findByIdAndDelete(id);
+    if (!newsItem) return responseHandler(res, 404, false, "News not found");
 
-    // Delete the image file if it exists
-    if (foundNews.image) {
-      const oldImagePath = path.join(__dirname, "../../uploads", foundNews.image);
+    // Delete image file if exists
+    if (newsItem.image) {
+      const oldImagePath = path.join(__dirname, "../../uploads", newsItem.image);
       if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
     }
 
-    responseHandler(res, 200, true, "News deleted successfully", null);
+    responseHandler(res, 200, true, "News deleted successfully");
   } catch (error) {
-    console.log("Error", error);
     responseHandler(res, 500, false, "Server error", error.message);
   }
 };
 
+// Update news
 const updateNews = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, category } = req.body;
+    const { title, description, categoryTitle } = req.body;
 
-    if (!title || !description) {
-      return responseHandler(res, 400, false, "Title and description are required", null);
-    }
+    if (!title || !description)
+      return responseHandler(res, 400, false, "Title and description are required");
 
     const newsItem = await News.findById(id);
-    if (!newsItem) return responseHandler(res, 404, false, "News not found", null);
+    if (!newsItem) return responseHandler(res, 404, false, "News not found");
 
-    const categoryDoc = await Category.findOne({ tab: "newsEvents" });
-    if (!categoryDoc) return responseHandler(res, 500, false, "Category document missing", null);
+    const updateData = { title, description, categoryTitle: finalCategory };
 
-    let finalCategory = category;
-    if (!finalCategory) {
-      const others = categoryDoc.categories.find(c => c.title === "Others");
-      if (!others) return responseHandler(res, 500, false, '"Others" category missing', null);
-      finalCategory = others._id;
-    } else {
-      const exists = categoryDoc.categories.id(finalCategory);
-      if (!exists) return responseHandler(res, 400, false, "Invalid category selected", null);
-    }
-
-    const updateData = { title, description, category: finalCategory };
-
-    // Delete old image if new image uploaded
-    if (req.file && newsItem.image) {
-      const oldImagePath = path.join(__dirname, "../../uploads", newsItem.image);
-      if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
-      updateData.image = req.file.filename;
-    } else if (req.file) {
+    // Handle image replacement
+    if (req.file) {
+      if (newsItem.image) {
+        const oldImagePath = path.join(__dirname, "../../uploads", newsItem.image);
+        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+      }
       updateData.image = req.file.filename;
     }
 
-    const updatedNews = await News.findByIdAndUpdate(id, updateData, { new: true }).populate('category', 'title');
+    const updatedNews = await News.findByIdAndUpdate(id, updateData, { new: true });
 
     responseHandler(res, 200, true, "News updated successfully", updatedNews);
   } catch (error) {
@@ -119,15 +101,17 @@ const updateNews = async (req, res) => {
   }
 };
 
+// Get single news with 3 latest others
 const getSingleNews = async (req, res) => {
   try {
     const { id } = req.params;
-    const foundNews = await News.findById(id).populate('category', 'title');
-    if (!foundNews) {
-      return responseHandler(res, 404, false, "News not found", null);
-    }
-    // send 3 more news except this found news
-    const remainingNews = await News.find({ _id: { $ne: id } }).populate('category', 'title').sort({ createdAt: -1 }).limit(3);
+    const foundNews = await News.findById(id);
+    if (!foundNews) return responseHandler(res, 404, false, "News not found");
+
+    const remainingNews = await News.find({ _id: { $ne: id } })
+      .sort({ createdAt: -1 })
+      .limit(3);
+
     responseHandler(res, 200, true, "News fetched successfully", {
       foundNews,
       remainingNews,
@@ -137,21 +121,17 @@ const getSingleNews = async (req, res) => {
   }
 };
 
+// Get news with categories
 const getNewsWithCategories = async (req, res) => {
   try {
-    const news = await News.find().populate('category', 'title');
-
-    // Fetch the newsEvents category document
+    const news = await News.find().sort({ createdAt: -1 });
     const categoryDoc = await Category.findOne({ tab: "newsEvents" });
-    const categories = categoryDoc ? categoryDoc.categories.filter(c => !c.isDeleted) : [];
+    const categories = categoryDoc?.categories.filter(c => !c.isDeleted) || [];
 
     res.status(200).json({
       success: true,
-      message: "News and events with categories fetched successfully",
-      data: {
-        categories, // newsEvents
-        news
-      }
+      message: "News and categories fetched successfully",
+      data: { categories, news },
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -164,5 +144,5 @@ module.exports = {
   deleteNews,
   updateNews,
   getSingleNews,
-  getNewsWithCategories
+  getNewsWithCategories,
 };

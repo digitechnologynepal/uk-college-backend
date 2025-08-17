@@ -11,10 +11,9 @@ const newsSchema = mongoose.Schema(
         image: {
             type: String,
         },
-        category: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Category",
-            required: true
+        categoryTitle: {
+            type: String,
+            required: true,
         },
     },
     { timestamps: true }
