@@ -15,6 +15,11 @@ const newsSchema = mongoose.Schema(
             type: String,
             required: true,
         },
+        tags: {
+            type: [String],  
+            required: true, 
+        },
+
     },
     { timestamps: true }
 )

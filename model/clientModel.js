@@ -7,6 +7,9 @@ const clientSchema = mongoose.Schema(
     website: { type: String },
     number: { type: String },
     location: { type: String },
+    clientImage: { type: String },
+    fbVideoUrl:{type: String},
+    ytVideoUrl:{type: String}
   },
   { timestamps: true }
 );

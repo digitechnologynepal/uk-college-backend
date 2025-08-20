@@ -20,9 +20,13 @@ const getFinalCategoryTitle = async (categoryTitle) => {
 // Create News
 const createNews = async (req, res) => {
   try {
-    const { title, description, categoryTitle } = req.body;
+    const { title, description, categoryTitle, tags } = req.body;
     if (!title || !description)
       return responseHandler(res, 400, false, "Title and description are required");
+
+    // Ensure tags exist and is a non-empty array
+    if (!tags || !Array.isArray(tags) || tags.length < 2)
+      return responseHandler(res, 400, false, "At least two tags are required");
 
     const finalCategory = await getFinalCategoryTitle(categoryTitle);
 
@@ -31,17 +35,17 @@ const createNews = async (req, res) => {
       description,
       image: req.file ? req.file.filename : null,
       categoryTitle: finalCategory,
+      tags,
     });
 
     await newNews.save();
-
     responseHandler(res, 201, true, "News created successfully", newNews);
   } catch (error) {
     responseHandler(res, 500, false, "Server error", error.message);
   }
 };
 
-// Get all news
+
 const getAllNews = async (req, res) => {
   try {
     const news = await News.find().sort({ createdAt: -1 });
@@ -51,7 +55,7 @@ const getAllNews = async (req, res) => {
   }
 };
 
-// Delete news
+
 const deleteNews = async (req, res) => {
   try {
     const { id } = req.params;
@@ -70,19 +74,29 @@ const deleteNews = async (req, res) => {
   }
 };
 
-// Update news
 const updateNews = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, categoryTitle } = req.body;
+    const { title, description, categoryTitle, tags } = req.body;
 
     if (!title || !description)
       return responseHandler(res, 400, false, "Title and description are required");
 
+    // Ensure tags exist and is a non-empty array
+    if (!tags || !Array.isArray(tags) || tags.length < 2 )
+      return responseHandler(res, 400, false, "At least two tags are required");
+
     const newsItem = await News.findById(id);
     if (!newsItem) return responseHandler(res, 404, false, "News not found");
 
-    const updateData = { title, description, categoryTitle: finalCategory };
+    const finalCategory = await getFinalCategoryTitle(categoryTitle);
+
+    const updateData = {
+      title,
+      description,
+      categoryTitle: finalCategory,
+      tags,
+    };
 
     // Handle image replacement
     if (req.file) {
@@ -94,7 +108,6 @@ const updateNews = async (req, res) => {
     }
 
     const updatedNews = await News.findByIdAndUpdate(id, updateData, { new: true });
-
     responseHandler(res, 200, true, "News updated successfully", updatedNews);
   } catch (error) {
     responseHandler(res, 500, false, "Server error", error.message);
@@ -121,28 +134,10 @@ const getSingleNews = async (req, res) => {
   }
 };
 
-// Get news with categories
-const getNewsWithCategories = async (req, res) => {
-  try {
-    const news = await News.find().sort({ createdAt: -1 });
-    const categoryDoc = await Category.findOne({ tab: "newsEvents" });
-    const categories = categoryDoc?.categories.filter(c => !c.isDeleted) || [];
-
-    res.status(200).json({
-      success: true,
-      message: "News and categories fetched successfully",
-      data: { categories, news },
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
 module.exports = {
   createNews,
   getAllNews,
   deleteNews,
   updateNews,
   getSingleNews,
-  getNewsWithCategories,
 };

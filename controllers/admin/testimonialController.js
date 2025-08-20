@@ -12,6 +12,19 @@ const createTestimonial = async (req, res) => {
             return responseHandler(res, 400, false, "Name and description are required", null);
         }
 
+        // Count existing testimonials
+        const existingCount = await Testimonial.countDocuments();
+        const MAX_TESTIMONIALS = 6;
+        if (existingCount >= MAX_TESTIMONIALS) {
+            return responseHandler(
+                res,
+                400,
+                false,
+                `Maximum of ${MAX_TESTIMONIALS} testimonials reached`,
+                null
+            );
+        }
+
         const newTestimonial = new Testimonial({
             name,
             description,

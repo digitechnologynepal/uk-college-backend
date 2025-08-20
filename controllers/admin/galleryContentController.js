@@ -20,12 +20,15 @@ const getFinalCategoryTitle = async (categoryTitle) => {
 // Create gallery content
 const createGalleryContent = async (req, res) => {
     try {
-        const { name, date, categoryTitle } = req.body;
+        const { name, date, categoryTitle, tags } = req.body;
         const file = req.file;
 
         if (!name || !file) {
             return responseHandler(res, 400, false, "Name and file are required.");
         }
+
+        if (!tags || !Array.isArray(tags) || tags.length < 2)
+            return responseHandler(res, 400, false, "At least two tags are required");
 
         let fileType = null;
         if (file.mimetype.startsWith("image/")) {
@@ -44,6 +47,7 @@ const createGalleryContent = async (req, res) => {
             fileType,
             date: date ? new Date(date) : new Date(),
             categoryTitle: finalCategory,
+            tags
         };
 
         const inserted = await GalleryContent.create(doc);
@@ -73,13 +77,17 @@ const getAllGalleryContents = async (req, res) => {
 const updateGalleryContent = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, date, categoryTitle } = req.body;
+        const { name, date, categoryTitle, tags } = req.body;
         const file = req.file;
 
         const existing = await GalleryContent.findById(id);
         if (!existing) {
             return responseHandler(res, 404, false, "Content not found.");
         }
+
+        // Ensure tags exist and is a non-empty array
+        if (!tags || !Array.isArray(tags) || tags.length < 2)
+            return responseHandler(res, 400, false, "At least two tags are required");
 
         // Delete old file if new one uploaded
         if (file && existing.file) {
@@ -91,9 +99,8 @@ const updateGalleryContent = async (req, res) => {
 
         existing.name = name || existing.name;
         existing.date = date ? new Date(date) : existing.date;
-
-        // Handle category update
         existing.categoryTitle = await getFinalCategoryTitle(categoryTitle);
+        existing.tags = tags;
 
         if (file) {
             existing.file = file.filename;
@@ -137,27 +144,9 @@ const deleteGalleryContent = async (req, res) => {
     }
 };
 
-// Get gallery with categories
-const getGalleryWithCategories = async (req, res) => {
-    try {
-        const gallery = await GalleryContent.find().sort({ createdAt: -1 });
-        const categoryDoc = await Category.findOne({ tab: "gallery" });
-        const categories = categoryDoc?.categories.filter(c => !c.isDeleted) || [];
-
-        res.status(200).json({
-            success: true,
-            message: "Gallery and categories fetched successfully",
-            data: { categories, gallery },
-        });
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
 module.exports = {
     createGalleryContent,
     getAllGalleryContents,
     updateGalleryContent,
     deleteGalleryContent,
-    getGalleryWithCategories,
 };

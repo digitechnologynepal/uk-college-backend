@@ -7,6 +7,5 @@ router.get("/all", newsController.getAllNews)
 router.delete("/delete/:id", newsController.deleteNews);
 router.put("/update/:id", upload.single("newsImage"), newsController.updateNews)
 router.get("/get/:id", newsController.getSingleNews)
-router.get("/newscategories", newsController.getNewsWithCategories);
 
 module.exports = router;

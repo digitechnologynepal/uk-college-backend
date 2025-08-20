@@ -19,10 +19,14 @@ const galleryContentSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
-     categoryTitle: {
-            type: String,
-            required: true,
-        },
+    categoryTitle: {
+        type: String,
+        required: true,
+    },
+    tags: {
+        type: [String],
+        required: true,
+    },
 });
 
 
