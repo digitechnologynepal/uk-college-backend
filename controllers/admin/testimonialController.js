@@ -39,7 +39,6 @@ const createTestimonial = async (req, res) => {
     }
 };
 
-
 const getAllTestimonials = async (req, res) => {
     try {
         const testimonials = await Testimonial.find();

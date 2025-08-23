@@ -4,21 +4,18 @@ const mottoSchema = mongoose.Schema(
   {
     motoTitle: {
       type: String,
+      required: true,
     },
     mission: {
       text: {
         type: String,
-      },
-      icon: {
-        type: String, 
+        required: true,
       },
     },
     vision: {
       text: {
         type: String,
-      },
-      icon: {
-        type: String,
+        required: true,
       },
     },
   },

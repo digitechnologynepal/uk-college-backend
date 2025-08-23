@@ -2,10 +2,8 @@ const mongoose = require("mongoose");
 
 const bannerSchema = mongoose.Schema(
   {
-    desktopImage: String, 
-    mobileImage: String,  
-    title: String,
-    description: String,
+    title: { type: String, required: true },
+    description: { type: String, required: true },
     isDeleted: { type: Boolean, default: false },
   },
   { timestamps: true }
