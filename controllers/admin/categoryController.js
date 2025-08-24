@@ -1,4 +1,6 @@
 const Category = require("../../model/categoryModel");
+const GalleryContent = require("../../model/galleryContentModel");
+const News = require("../../model/newsModal");
 
 // Helper: Ensure a document exists for a tab
 const ensureCategoryDoc = async (tab) => {
@@ -121,10 +123,34 @@ const softDeleteCategory = async (req, res) => {
       return res.status(400).json({ success: false, message: "Cannot delete 'Others' category" });
     }
 
+    // Soft delete the category
     item.isDeleted = true;
     await categoryDoc.save();
 
-    res.status(200).json({ success: true, message: "Category soft deleted", data: categoryDoc.categories });
+    // Find "Others" category title
+    const others = categoryDoc.categories.find(
+      (c) => c.title?.toLowerCase() === "others"
+    );
+    const othersTitle = others?.title || "Others";
+
+    // Reassign items depending on tab
+    if (tab === "gallery") {
+      await GalleryContent.updateMany(
+        { categoryTitle: item.title },
+        { categoryTitle: othersTitle }
+      );
+    } else if (tab === "newsEvents") {
+      await News.updateMany(
+        { categoryTitle: item.title },
+        { categoryTitle: othersTitle }
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Category soft deleted and items moved to '${othersTitle}'`,
+      data: categoryDoc.categories,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
