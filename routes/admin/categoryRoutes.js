@@ -4,12 +4,12 @@ const {
   getCategories,
   addCategory,
   updateCategory,
-  softDeleteCategory
+  deleteCategory
 } = require("../../controllers/admin/categoryController");
 
 router.get("/:tab/get", getCategories);
 router.post("/:tab/add", addCategory);
 router.put("/:tab/update", updateCategory);
-router.delete("/:tab/soft-delete", softDeleteCategory);
+router.delete("/:tab/delete", deleteCategory);
 
 module.exports = router;

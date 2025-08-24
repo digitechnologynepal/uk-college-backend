@@ -109,7 +109,7 @@ const updateCategory = async (req, res) => {
   }
 };
 
-const softDeleteCategory = async (req, res) => {
+const deleteCategory = async (req, res) => {
   try {
     const { tab } = req.params;
     const { id } = req.body;
@@ -160,5 +160,5 @@ module.exports = {
   getCategories,
   addCategory,
   updateCategory,
-  softDeleteCategory,
+  deleteCategory,
 };
