@@ -21,6 +21,7 @@ router.put(
   ]),
   courseController.updateCourse
 );
+router.get("/slug/:slug", courseController.getCourseBySlug);
 
 
 module.exports = router;

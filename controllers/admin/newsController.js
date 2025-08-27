@@ -83,7 +83,7 @@ const updateNews = async (req, res) => {
       return responseHandler(res, 400, false, "Title and description are required");
 
     // Ensure tags exist and is a non-empty array
-    if (!tags || !Array.isArray(tags) || tags.length < 2 )
+    if (!tags || !Array.isArray(tags) || tags.length < 2)
       return responseHandler(res, 400, false, "At least two tags are required");
 
     const newsItem = await News.findById(id);
@@ -134,10 +134,36 @@ const getSingleNews = async (req, res) => {
   }
 };
 
+const getNewsBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    // Find the main news by slug
+    const foundNews = await News.findOne({ slug });
+    if (!foundNews) {
+      return responseHandler(res, 404, false, "News not found");
+    }
+
+    // Find 3 latest news excluding the main one
+    const remainingNews = await News.find({ _id: { $ne: foundNews._id } })
+      .sort({ createdAt: -1 })
+      .limit(3);
+
+    responseHandler(res, 200, true, "News fetched successfully", {
+      foundNews,
+      remainingNews,
+    });
+  } catch (error) {
+    responseHandler(res, 500, false, "Error fetching news", error.message);
+  }
+};
+
+
 module.exports = {
   createNews,
   getAllNews,
   deleteNews,
   updateNews,
   getSingleNews,
+  getNewsBySlug
 };

@@ -47,7 +47,7 @@ const createCourse = async (req, res) => {
       title,
       description,
       level: levels,
-      modules: parsedModules, 
+      modules: parsedModules,
       image,
     });
 
@@ -154,7 +154,7 @@ const deleteCourse = async (req, res) => {
 
     ["image"].forEach((field) => {
       if (course[field]) {
-        deleteImage(path.join(__dirname, "../uploads", course[field]));
+        deleteImage(path.join(__dirname, "../../uploads", course[field]));
       }
     });
 
@@ -164,5 +164,19 @@ const deleteCourse = async (req, res) => {
   }
 };
 
+const getCourseBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const course = await Course.findOne({ slug });
+    if (!course) {
+      return responseHandler(res, 404, false, "Course not found", null);
+    }
+    responseHandler(res, 200, true, "Course fetched successfully", course);
+  } catch (error) {
+    responseHandler(res, 500, false, "Error fetching course", error);
+  }
+};
 
-module.exports = { createCourse, getAllCourses, getCourseById, deleteCourse, updateCourse };
+
+
+module.exports = { createCourse, getAllCourses, getCourseById, deleteCourse, updateCourse, getCourseBySlug };
