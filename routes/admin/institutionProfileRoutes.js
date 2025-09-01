@@ -15,4 +15,10 @@ router.post(
     institutionProfileController.updateInstitutionProfile);
 router.get("/get", institutionProfileController.getInstitutionProfile);
 
+// Delete brochure
+router.delete("/delete-brochure", institutionProfileController.deleteBrochure);
+
+// Delete certificate
+router.delete("/delete-certificate", institutionProfileController.deleteCertificate);
+
 module.exports = router

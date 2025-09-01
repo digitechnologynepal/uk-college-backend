@@ -80,7 +80,49 @@ const getInstitutionProfile = async (req, res) => {
     }
 };
 
+const deleteBrochure = async (req, res) => {
+    try {
+        const content = await institutionProfile.findOne();
+        if (!content || !content.brochure) {
+            return responseHandler(res, 404, false, 'No brochure found to delete.');
+        }
+
+        const filePath = path.join(__dirname, "../../uploads", content.brochure);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+        content.brochure = null;
+        await content.save();
+
+        return responseHandler(res, 200, true, 'Brochure deleted successfully.', content);
+    } catch (error) {
+        console.log('Error in deleteBrochure:', error);
+        return responseHandler(res, 500, false, 'An error occurred while deleting brochure.');
+    }
+};
+
+const deleteCertificate = async (req, res) => {
+    try {
+        const content = await institutionProfile.findOne();
+        if (!content || !content.certificate) {
+            return responseHandler(res, 404, false, 'No certificate found to delete.');
+        }
+
+        const filePath = path.join(__dirname, "../../uploads", content.certificate);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+        content.certificate = null;
+        await content.save();
+
+        return responseHandler(res, 200, true, 'Certificate deleted successfully.', content);
+    } catch (error) {
+        console.log('Error in deleteCertificate:', error);
+        return responseHandler(res, 500, false, 'An error occurred while deleting certificate.');
+    }
+};
+
 module.exports = {
     updateInstitutionProfile,
-    getInstitutionProfile
+    getInstitutionProfile,
+    deleteBrochure,
+    deleteCertificate
 };
