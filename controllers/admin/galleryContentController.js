@@ -13,53 +13,49 @@ const getFinalCategoryTitle = async (categoryTitle) => {
     return others?.title || "Others";
 };
 
-// Create gallery content (single or multiple)
 const createGalleryContent = async (req, res) => {
-    try {
-        const { name, date, categoryTitle, tags } = req.body;
-        const files = req.files || (req.file ? [req.file] : []);
+  try {
+    const { name, date, categoryTitle, tags } = req.body;
+    const files = req.files || (req.file ? [req.file] : []);
 
-        if (!files.length || !name) {
-            return responseHandler(res, 400, false, "File(s) and name(s) are required.");
-        }
-
-        const finalCategory = await getFinalCategoryTitle(categoryTitle);
-
-        const nameArr = Array.isArray(name) ? name : [name];
-        const tagsArr = Array.isArray(tags) ? tags : JSON.parse(tags);
-
-        if (tagsArr.length < 2) {
-            return responseHandler(res, 400, false, "At least two tags are required.");
-        }
-
-        // Determine album title if multiple files
-        const albumTitle = files.length > 1 ? nameArr[0] : null;
-
-        const docs = files.map((file, idx) => {
-            let fileType = file.mimetype.startsWith("image/") ? "image"
-                : file.mimetype.startsWith("video/") ? "video"
-                    : null;
-
-            if (!fileType) throw new Error("Unsupported file type");
-
-            return {
-                name: nameArr[idx] || `Untitled ${idx + 1}`,
-                file: file.filename,
-                fileType,
-                date: date ? new Date(date) : new Date(),
-                categoryTitle: finalCategory,
-                tags: tagsArr,
-                albumTitle
-            };
-        });
-
-        const inserted = await GalleryContent.insertMany(docs);
-        return responseHandler(res, 200, true, "Gallery content added successfully.", inserted);
-    } catch (error) {
-        console.error("Error in createGalleryContent:", error);
-        return responseHandler(res, 500, false, error.message || "Failed to add gallery content.");
+    if (!files.length || !name) {
+      return responseHandler(res, 400, false, "File(s) and album name are required.");
     }
+
+    const finalCategory = await getFinalCategoryTitle(categoryTitle);
+    const tagsArr = Array.isArray(tags) ? tags : JSON.parse(tags || "[]");
+
+    if (tagsArr.length < 2) {
+      return responseHandler(res, 400, false, "At least two tags are required.");
+    }
+
+    const albumTitle = name;
+
+    const docs = files.map((file) => {
+      let fileType = file.mimetype.startsWith("image/") ? "image"
+        : file.mimetype.startsWith("video/") ? "video"
+        : null;
+      if (!fileType) throw new Error("Unsupported file type");
+
+      return {
+        name: albumTitle, // unify naming
+        file: file.filename,
+        fileType,
+        date: date ? new Date(date) : new Date(),
+        categoryTitle: finalCategory,
+        tags: tagsArr,
+        albumTitle,
+      };
+    });
+
+    const inserted = await GalleryContent.insertMany(docs);
+    return responseHandler(res, 200, true, "Gallery album created successfully.", inserted);
+  } catch (error) {
+    console.error("Error in createGalleryContent:", error);
+    return responseHandler(res, 500, false, error.message || "Failed to add gallery content.");
+  }
 };
+
 
 // Get all gallery contents
 const getAllGalleryContents = async (req, res) => {
