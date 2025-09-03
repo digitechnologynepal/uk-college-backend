@@ -1,24 +1,20 @@
 const express = require("express");
 const router = express.Router();
-const { upload } = require("../../middleware/upload"); 
+const { upload } = require("../../middleware/upload");
 
 const galleryContentController = require("../../controllers/admin/galleryContentController");
 
-router.post(
-    "/add",
-    upload.single("file"),
-    galleryContentController.createGalleryContent
-);
+// Create: single or multiple files
+router.post("/add", upload.array("files"), galleryContentController.createGalleryContent);
 
 router.get("/get", galleryContentController.getAllGalleryContents);
 
-router.put(
-    "/update/:id",
-    upload.single("file"),
-    galleryContentController.updateGalleryContent
-);
+router.put("/update/:id", upload.array("files"), galleryContentController.updateGalleryContent);
 
-// Delete a single media entry
 router.delete("/delete/:id", galleryContentController.deleteGalleryContent);
+
+router.delete("/album/:albumTitle", galleryContentController.deleteAlbum);
+
+router.put("/album/update/:albumTitle", upload.array("files"), galleryContentController.updateAlbum);
 
 module.exports = router;
