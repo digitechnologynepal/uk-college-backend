@@ -1,4 +1,4 @@
-const WhyChooseUs = require("../../model/whyChooseUsModal");
+const WhyChooseUs = require("../../model/whyChooseUsModel");
 const { responseHandler } = require("../../helper/responseHandler");
 const path = require("path");
 const fs = require("fs");

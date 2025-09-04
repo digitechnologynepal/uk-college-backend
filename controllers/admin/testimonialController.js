@@ -1,4 +1,4 @@
-const Testimonial = require("../../model/testimonialModal")
+const Testimonial = require("../../model/testimonialModel")
 const { responseHandler } = require("../../helper/responseHandler");
 const path = require("path");
 const fs = require("fs");

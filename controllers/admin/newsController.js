@@ -1,5 +1,5 @@
 const { responseHandler } = require("../../helper/responseHandler");
-const News = require("../../model/newsModal");
+const News = require("../../model/newsModel");
 const Category = require("../../model/categoryModel");
 const fs = require("fs");
 const path = require("path");

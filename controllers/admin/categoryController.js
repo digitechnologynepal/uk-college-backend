@@ -1,6 +1,6 @@
 const Category = require("../../model/categoryModel");
 const GalleryContent = require("../../model/galleryContentModel");
-const News = require("../../model/newsModal");
+const News = require("../../model/newsModel");
 
 // Helper: Ensure a document exists for a tab
 const ensureCategoryDoc = async (tab) => {
