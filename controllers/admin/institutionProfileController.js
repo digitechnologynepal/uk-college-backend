@@ -8,6 +8,7 @@ const updateInstitutionProfile = async (req, res) => {
         const { email, location, number, facebook, threadLink, whatsapp, insta, linkedin, locationForMap } = req.body;
         const brochureFile = req.files?.brochure?.[0];
         const certificateFile = req.files?.certificate?.[0];
+        const institutionCertificateFile = req.files?.institutionCertificate?.[0];
 
 
         if (!email || !location || !number || !facebook || !whatsapp || !insta || !linkedin || !locationForMap) {
@@ -43,6 +44,14 @@ const updateInstitutionProfile = async (req, res) => {
                 existingContent.certificate = certificateFile.filename;
             }
 
+            if (institutionCertificateFile) {
+                if (existingContent.institutionCertificate) {
+                    const oldPath = path.join(__dirname, "../../uploads", existingContent.institutionCertificate);
+                    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+                }
+                existingContent.institutionCertificate = institutionCertificateFile.filename;
+            }
+
 
             await existingContent.save();
             return responseHandler(res, 200, true, 'Institution Profile updated successfully.', existingContent);
@@ -59,6 +68,7 @@ const updateInstitutionProfile = async (req, res) => {
                 locationForMap,
                 brochure: brochureFile ? brochureFile.filename : null,
                 certificate: certificateFile ? certificateFile.filename : null,
+                institutionCertificate: institutionCertificateFile ? institutionCertificateFile.filename : null,
             });
 
             await newContent.save();
@@ -120,9 +130,30 @@ const deleteCertificate = async (req, res) => {
     }
 };
 
+const deleteInstitutionCertificate = async (req, res) => {
+    try {
+        const content = await institutionProfile.findOne();
+        if (!content || !content.institutionCertificate) {
+            return responseHandler(res, 404, false, 'No institution certificate found to delete.');
+        }
+
+        const filePath = path.join(__dirname, "../../uploads", content.institutionCertificate);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+        content.institutionCertificate = null;
+        await content.save();
+
+        return responseHandler(res, 200, true, 'Institution Certificate deleted successfully.', content);
+    } catch (error) {
+        console.log('Error in deleteInstitutionCertificate:', error);
+        return responseHandler(res, 500, false, 'An error occurred while deleting institution certificate.');
+    }
+};
+
 module.exports = {
     updateInstitutionProfile,
     getInstitutionProfile,
     deleteBrochure,
-    deleteCertificate
+    deleteCertificate,
+    deleteInstitutionCertificate
 };

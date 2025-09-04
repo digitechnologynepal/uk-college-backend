@@ -11,6 +11,7 @@ router.post(
     uploadPDF.fields([
         { name: "brochure", maxCount: 1 },
         { name: "certificate", maxCount: 1 },
+        { name: "institutionCertificate", maxCount: 1 },
     ]),
     institutionProfileController.updateInstitutionProfile);
 router.get("/get", institutionProfileController.getInstitutionProfile);
@@ -20,5 +21,8 @@ router.delete("/delete-brochure", institutionProfileController.deleteBrochure);
 
 // Delete certificate
 router.delete("/delete-certificate", institutionProfileController.deleteCertificate);
+
+// Delete instution certificate
+router.delete("/delete-institution-certificate", institutionProfileController.deleteInstitutionCertificate);
 
 module.exports = router

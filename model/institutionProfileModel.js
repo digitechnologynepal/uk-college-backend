@@ -35,6 +35,9 @@ const institutionProfileSchema = mongoose.Schema(
         certificate: {
             type: String,
         },
+        institutionCertificate: {
+            type: String,
+        },
     },
     { timestamps: true }
 );
