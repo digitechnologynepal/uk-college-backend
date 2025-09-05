@@ -1,4 +1,5 @@
 const multer = require("multer");
+const { v4: uuidv4 } = require("uuid");
 
 // Acceptable mime types for image and video
 const allowedMimeTypes = [
@@ -19,9 +20,10 @@ const storage = multer.diskStorage({
     cb(null, "./uploads");
   },
   filename: (req, file, cb) => {
-    const fileName = file.originalname.replace(/\s/g, "_");
-    cb(null, fileName);
-  },
+    const ext = file.originalname.split('.').pop();
+    const uniqueName = `${uuidv4()}.${ext}`;
+    cb(null, uniqueName);
+  }
 });
 
 // file filter
